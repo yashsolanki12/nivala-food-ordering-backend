@@ -3,7 +3,7 @@ import fs from "fs";
 
 //add food item
 const addFood = async (req, res) => {
-  console.log(req.body)
+  console.log(req.body);
 
   const food = new foodModel({
     name: req.body.name,
@@ -15,7 +15,7 @@ const addFood = async (req, res) => {
     type: req.body.type,
   });
 
-  console.log(food)
+  console.log(food);
   try {
     await food.save();
     res.json({ success: true, message: "Food Item Added Successfully" });
@@ -29,7 +29,7 @@ const addFood = async (req, res) => {
 const listFood = async (req, res) => {
   try {
     const food = await foodModel.find({});
-    res.json({ success: true, food });
+    res.json({ success: true, data: food });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: "Failed to fetch Food List" });
@@ -40,11 +40,21 @@ const listFood = async (req, res) => {
 const removeFood = async (req, res) => {
   try {
     const food = await foodModel.findById(req.body.id);
-    await foodModel.findByIdAndDelete(req.body.id);
-    res.json({ success: true, message: "Food Item Deleted Successfully" });
+    if (food) {
+      await foodModel.findByIdAndDelete(req.body.id);
+      res.json({ success: true, message: "Food Item Deleted Successfully" });
+    }
+    if (!food) {
+      res
+        .status(404)
+        .json({
+          success: false,
+          message: "Cannot find the food item to delete",
+        });
+    }
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: "Failed to delete Food"});
+    res.json({ success: false, message: "Failed to delete Food" });
   }
 };
 
