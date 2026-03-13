@@ -26,7 +26,12 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(
   cors({
-    origin: ["http://localhost:5173", "http://localhost:5174"],
+    origin: [
+      "http://localhost:5173",
+      "http://localhost:5174",
+      "https://nivala-food-ordering-admin.onrender.com",
+      "https://nivala-food-ordering-frontend.onrender.com",
+    ],
     credentials: true,
   }),
 );
