@@ -46,6 +46,14 @@ const updatepromo = async (req, res) => {
     const { promoId, promoCode, discount, expiryDate, isActive, discountType } =
       req.body;
 
+    const existing = await promoModel.findOne({
+      promoCode: req.body.promoCode,
+    });
+
+    if (existing && existing._id.toString() !== promoId) {
+      return res.status(400).json({ message: "Promo code already in use" });
+    }
+
     const updatedPromo = await promoModel.findByIdAndUpdate(
       promoId,
       {
@@ -55,7 +63,7 @@ const updatepromo = async (req, res) => {
         isActive,
         discountType,
       },
-      { new: true }
+      { new: true },
     );
 
     if (!updatedPromo) {
@@ -84,7 +92,14 @@ const deletepromo = async (req, res) => {
     const promo = await promoModel.findOneAndDelete({
       promoCode: req.body.promoCode,
     });
-    return res.status(200).json({ success: true, message: "Promo deleted successfully" });
+    if (promo) {
+      return res
+        .status(200)
+        .json({ success: true, message: "Promo deleted successfully" });
+    }
+    if (!promo) {
+      return res.status(404).json({success: false, message: "Promo code not found"})
+    }
   } catch (error) {
     res.status(500).json({
       success: false,

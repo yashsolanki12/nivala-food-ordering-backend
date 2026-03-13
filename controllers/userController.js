@@ -29,7 +29,7 @@ const loginUser = async (req, res) => {
     const token = jwtToken(user.name, user.email, user._id);
     return res
       .status(200)
-      .json({ success: true, message: "User Logged In", token });
+      .json({ success: true, message: "User Logged In", token, data: user });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ success: false, message: error });
@@ -130,7 +130,7 @@ const loginadmin = async (req, res) => {
       { id: admin._id, role: admin.role },
       process.env.JWT_SECRET,
       {
-        expiresIn: "1h",
+        expiresIn: "1d",
       },
     );
 
@@ -140,4 +140,22 @@ const loginadmin = async (req, res) => {
   }
 };
 
-export { loginUser, registerUser, loginadmin };
+const listUser = async (_req, res) => {
+  try {
+    const user = await userModel.find({});
+    if (user) {
+      res.status(201).json({
+        success: true,
+        message: "User retrieved successfully",
+        data: user,
+      });
+    }
+    if (!user) {
+      res.status(404).json({ success: false, message: "User not found" });
+    }
+  } catch (error) {
+    res.status(500).json({ success: false, message: "Server error" });
+  }
+};
+
+export { loginUser, registerUser, loginadmin, listUser };
