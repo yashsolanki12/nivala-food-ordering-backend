@@ -19,6 +19,11 @@ const addpromo = async (req, res) => {
       data: newpromo,
     });
   } catch (error) {
+    if (error.code === 11000) {
+      res
+        .status(409)
+        .json({ success: false, message: "Promo code already in use." });
+    }
     res.status(500).json({
       success: false,
       message: "Failed to add promo",
@@ -51,7 +56,9 @@ const updatepromo = async (req, res) => {
     });
 
     if (existing && existing._id.toString() !== promoId) {
-      return res.status(400).json({ message: "Promo code already in use" });
+      return res
+        .status(409)
+        .json({ success: false, message: "Promo code already in use." });
     }
 
     const updatedPromo = await promoModel.findByIdAndUpdate(
@@ -98,7 +105,9 @@ const deletepromo = async (req, res) => {
         .json({ success: true, message: "Promo deleted successfully" });
     }
     if (!promo) {
-      return res.status(404).json({success: false, message: "Promo code not found"})
+      return res
+        .status(404)
+        .json({ success: false, message: "Promo code not found" });
     }
   } catch (error) {
     res.status(500).json({
