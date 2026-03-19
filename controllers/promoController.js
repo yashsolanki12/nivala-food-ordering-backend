@@ -20,11 +20,11 @@ const addpromo = async (req, res) => {
     });
   } catch (error) {
     if (error.code === 11000) {
-      res
+      return res
         .status(409)
         .json({ success: false, message: "Promo code already in use." });
     }
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: "Failed to add promo",
       error: error.message,
