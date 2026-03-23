@@ -2,6 +2,7 @@ import userModel from "../models/userModel.js";
 import bcrypt from "bcrypt";
 import jwt from "jsonwebtoken";
 import validator from "validator";
+import mongoose from "mongoose";
 
 const loginUser = async (req, res) => {
   const { email, password } = req.body;
@@ -158,4 +159,122 @@ const listUser = async (_req, res) => {
   }
 };
 
-export { loginUser, registerUser, loginadmin, listUser };
+// Detail user
+const getUser = async (req, res) => {
+  const { id } = req.params;
+  try {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid id format.",
+      });
+    }
+    const userDetail = await userModel.findById(id);
+    if (userDetail) {
+      return res.status(200).json({
+        success: true,
+        message: "User fetched successfully.",
+        data: userDetail,
+      });
+    }
+    if (!userDetail) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching get api of user.",
+      error: error.message,
+    });
+  }
+};
+
+// Update user
+const updateUser = async (req, res) => {
+  const { id } = req.params;
+  const { name, role } = req.body;
+  try {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid id format.",
+      });
+    }
+    if (!name || !role) {
+      return res.status(400).json({
+        success: false,
+        message: "Please fill up all data.",
+      });
+    }
+    const payload = {
+      name: name,
+      role: role,
+    };
+    const user = await userModel.findByIdAndUpdate(id, payload, { new: true });
+    if (user) {
+      return res.status(200).json({
+        success: true,
+        message: "User updated successfully.",
+        data: user,
+      });
+    }
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while updating the api of user.",
+      error: error.message,
+    });
+  }
+};
+
+// Delete user
+const deleteUser = async (req, res) => {
+  const { id } = req.params;
+  try {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid id format.",
+      });
+    }
+    const user = await userModel.findByIdAndDelete(id);
+    if (user) {
+      return res.status(200).json({
+        success: true,
+        message: "User deleted successfully.",
+      });
+    }
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while deleting the user.",
+      error: error.message,
+    });
+  }
+};
+
+export {
+  loginUser,
+  registerUser,
+  loginadmin,
+  listUser,
+  getUser,
+  updateUser,
+  deleteUser,
+};
