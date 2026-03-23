@@ -1,6 +1,7 @@
 import express from "express";
 import {
   addFood,
+  getFood,
   listFood,
   removeFood,
   updateFood,
@@ -13,5 +14,6 @@ foodRouter.post("/add", authMiddleware, addFood);
 foodRouter.get("/list", authMiddleware, listFood);
 foodRouter.delete("/remove", authMiddleware, removeFood);
 foodRouter.put("/:id", authMiddleware, updateFood);
+foodRouter.get("/:id", authMiddleware, getFood);
 
 export default foodRouter;
