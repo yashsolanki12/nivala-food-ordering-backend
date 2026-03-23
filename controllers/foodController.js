@@ -3,7 +3,6 @@ import mongoose from "mongoose";
 
 //add food item
 const addFood = async (req, res) => {
-  console.log(req.body);
 
   const food = new foodModel({
     name: req.body.name,
@@ -17,14 +16,25 @@ const addFood = async (req, res) => {
 
   console.log(food);
   try {
-    await food.save();
-    res.json({ success: true, message: "Food item added successfully" });
+    const foodList = await food.save();
+    if (foodList) {
+      res
+        .status(200)
+        .json({ success: true, message: "Product added successfully." });
+    }
+    if (!foodList) {
+      res.status(200).json({
+        success: false,
+        message: "No item found",
+      });
+    }
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: "Failed to add Food Item" });
+    res.json({ success: false, message: "Failed to add item" });
   }
 };
 
+// Update food item
 const updateFood = async (req, res) => {
   const { id } = req.params;
   const { name, description, price, image, category } = req.body;
@@ -33,7 +43,7 @@ const updateFood = async (req, res) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid Product ID format",
+        message: "Invalid product ID format",
       });
     }
     if (!name || !description || !price || !image || !category) {
@@ -55,7 +65,7 @@ const updateFood = async (req, res) => {
     if (updateFood) {
       return res.status(200).json({
         success: true,
-        message: "Food item updated successfully.",
+        message: "Product updated successfully.",
         data: updateFood,
       });
     }
@@ -69,14 +79,63 @@ const updateFood = async (req, res) => {
     console.error(error);
   }
 };
+
+// Detail Food item
+const getFood = async (req, res) => {
+  const { id } = req.params;
+  try {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid product ID format",
+      });
+    }
+
+    const food = await foodModel.findById(id);
+    if (food) {
+      return res.status(200).json({
+        success: true,
+        message: "Product fetched successfully.",
+        data: food,
+      });
+    }
+    if (!food) {
+      return res.status(404).json({
+        success: false,
+        message: "No item found.",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while fetching get api.",
+      error: error.message,
+    });
+  }
+};
+
 //Getting Food List
 const listFood = async (req, res) => {
   try {
     const food = await foodModel.find({});
-    res.json({ success: true, data: food });
+    if (food) {
+      return res
+        .status(200)
+        .json({
+          success: true,
+          message: "Product list fetched successfully",
+          data: food,
+        });
+    }
+    if (!food) {
+      return res
+        .status(404)
+        .json({ success: false, message: "No item found." });
+    }
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: "Failed to fetch Food List" });
+    res.json({ success: false, message: "Failed to fetch list." });
   }
 };
 
@@ -86,18 +145,18 @@ const removeFood = async (req, res) => {
     const food = await foodModel.findById(req.body.id);
     if (food) {
       await foodModel.findByIdAndDelete(req.body.id);
-      res.json({ success: true, message: "Food Item Deleted Successfully" });
+      res.json({ success: true, message: "Product deleted successfully." });
     }
     if (!food) {
       res.status(404).json({
         success: false,
-        message: "Cannot find the food item to delete",
+        message: "Cannot find the item to delete",
       });
     }
   } catch (error) {
     console.log(error);
-    res.json({ success: false, message: "Failed to delete Food" });
+    res.json({ success: false, message: "Failed to delete item" });
   }
 };
 
-export { addFood, listFood, removeFood, updateFood };
+export { addFood, listFood, removeFood, updateFood, getFood };
