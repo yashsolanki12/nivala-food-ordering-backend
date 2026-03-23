@@ -1,5 +1,5 @@
 import foodModel from "../models/foodModel.js";
-import fs from "fs";
+import mongoose from "mongoose";
 
 //add food item
 const addFood = async (req, res) => {
@@ -18,13 +18,57 @@ const addFood = async (req, res) => {
   console.log(food);
   try {
     await food.save();
-    res.json({ success: true, message: "Food Item Added Successfully" });
+    res.json({ success: true, message: "Food item added successfully" });
   } catch (error) {
     console.log(error);
     res.json({ success: false, message: "Failed to add Food Item" });
   }
 };
 
+const updateFood = async (req, res) => {
+  const { id } = req.params;
+  const { name, description, price, image, category } = req.body;
+
+  try {
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid Product ID format",
+      });
+    }
+    if (!name || !description || !price || !image || !category) {
+      return res.status(400).json({
+        success: false,
+        message: "Please fill up all data.",
+      });
+    }
+    const payload = {
+      name: name,
+      description: description,
+      price: price,
+      image: image,
+      category: category,
+    };
+    const updateFood = await foodModel.findByIdAndUpdate(id, payload, {
+      new: true,
+    });
+    if (updateFood) {
+      return res.status(200).json({
+        success: true,
+        message: "Food item updated successfully.",
+        data: updateFood,
+      });
+    }
+    if (!updateFood) {
+      return res.status(404).json({
+        success: false,
+        message: "Product not found.",
+      });
+    }
+  } catch (error) {
+    console.error(error);
+  }
+};
 //Getting Food List
 const listFood = async (req, res) => {
   try {
@@ -45,12 +89,10 @@ const removeFood = async (req, res) => {
       res.json({ success: true, message: "Food Item Deleted Successfully" });
     }
     if (!food) {
-      res
-        .status(404)
-        .json({
-          success: false,
-          message: "Cannot find the food item to delete",
-        });
+      res.status(404).json({
+        success: false,
+        message: "Cannot find the food item to delete",
+      });
     }
   } catch (error) {
     console.log(error);
@@ -58,4 +100,4 @@ const removeFood = async (req, res) => {
   }
 };
 
-export { addFood, listFood, removeFood };
+export { addFood, listFood, removeFood, updateFood };
