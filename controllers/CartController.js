@@ -33,7 +33,7 @@ const addToCart = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Item Added to Cart" });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({ success: false, message: "Error" });
   }
 };
@@ -71,7 +71,7 @@ const removeFromCart = async (req, res) => {
       // data: cartData,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({ success: false, message: "Error" });
   }
 };
@@ -133,7 +133,7 @@ const getCart = async (req, res) => {
       .status(200)
       .json({ success: true, cartData: cartWithProductData });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({ success: false, message: "Error" });
   }
 };
@@ -151,7 +151,7 @@ const deleteCart = async (req, res) => {
       .status(200)
       .json({ success: true, message: "Cart Deleted Successfully" });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({ success: false, message: "Error" });
   }
 };

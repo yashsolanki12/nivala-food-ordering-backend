@@ -32,7 +32,6 @@ const authMiddleware = async (req, res, next) => {
       return res.status(401).json({ success: false, message: "Invalid token" });
     }
 
-    console.log("decodedToken:", decodedToken);
 
     // Get the user id from the decoded token - handle all possible field names
     const userId = decodedToken.id || decodedToken._id;
