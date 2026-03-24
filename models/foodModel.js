@@ -8,6 +8,11 @@ const foodSchema = new mongoose.Schema({
   category: { type: String, required: true },
   serve: { type: String, required: false },
   type: { type: String, required: false },
+  userId: {
+    type: mongoose.Schema.Types.ObjectId,
+    required: true,
+    ref: "users",
+  },
 });
 
 const foodModel = mongoose.models.food || mongoose.model("food", foodSchema);
