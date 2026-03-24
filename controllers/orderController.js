@@ -1,11 +1,24 @@
 import orderModel from "../models/orderModel.js";
 import userModel from "../models/userModel.js";
+import foodModel from "../models/foodModel.js";
 
 const placeOrder = async (req, res) => {
   try {
+    // Initialize req.body if undefined
+    if (!req.body) {
+      req.body = {};
+    }
+    // Get all unique userIds from the food items in the order
+    const itemIds = req.body.items.map((item) => item._id);
+    const foodItems = await foodModel.find({ _id: { $in: itemIds } });
+    const userIds = [
+      ...new Set(foodItems.map((item) => item.userId.toString())),
+    ];
+
     const newOrder = new orderModel({
       orderId: req.body.userId + Date.now().toString(),
       userId: req.body.userId,
+      userIds: userIds,
       items: req.body.items,
       amount: req.body.amount,
       address: req.body.address,
@@ -27,8 +40,10 @@ const placeOrder = async (req, res) => {
 };
 
 const userOrders = async (req, res) => {
+  console.log("req", req.body);
   try {
     const orders = await orderModel.find({ userId: req.body.userId });
+    console.log("order",orders)
     return res.status(200).json({
       success: true,
       message: "User order fetch successfully",
@@ -46,7 +61,9 @@ const userOrders = async (req, res) => {
 
 const listOrders = async (req, res) => {
   try {
-    const orders = await orderModel.find({});
+    const orders = await orderModel.find({
+      userIds: { $in: [req.body.userId] },
+    });
     return res.status(200).json({
       success: true,
       message: "Order list retrieved successfully",
@@ -64,9 +81,9 @@ const listOrders = async (req, res) => {
 
 const updateStatus = async (req, res) => {
   try {
-    // Find by custom orderId field instead of MongoDB _id
+    // Find by custom orderId field instead of MongoDB _id, and filter by adminIds
     await orderModel.findOneAndUpdate(
-      { orderId: req.body.orderId },
+      { orderId: req.body.orderId, userIds: { $in: [req.body.userId] } },
       { status: req.body.status },
     );
     return res.status(200).json({ success: true, message: "Status Updated" });

@@ -1,7 +1,12 @@
 import promoModel from "../models/promoModel.js";
+import userModel from "../models/userModel.js";
 
 const addpromo = async (req, res) => {
   try {
+    // Initialize req.body if undefined
+    if (!req.body) {
+      req.body = {};
+    }
     const newpromo = promoModel({
       promoCode: req.body.promoCode,
       discount: req.body.discount,
@@ -9,6 +14,7 @@ const addpromo = async (req, res) => {
       isActive: req.body.isActive,
       createdAt: new Date(),
       discountType: req.body.discountType,
+      userId: req.body.userId,
     });
 
     await newpromo.save();
@@ -34,7 +40,21 @@ const addpromo = async (req, res) => {
 
 const getallpromo = async (req, res) => {
   try {
-    const promos = await promoModel.find({});
+    // Initialize req.body if undefined
+    if (!req.body) {
+      req.body = {};
+    }
+
+    // Get the user's linked adminId
+    const user = await userModel.findById(req.body.userId);
+    let adminIdToUse = req.body.userId;
+
+    // If user has adminId linked, use that admin's promo codes
+    if (user && user.adminId) {
+      adminIdToUse = user.adminId;
+    }
+
+    const promos = await promoModel.find({ userId: adminIdToUse });
     return res.status(200).json({ success: true, data: promos });
   } catch (error) {
     console.log(error);
@@ -53,6 +73,7 @@ const updatepromo = async (req, res) => {
 
     const existing = await promoModel.findOne({
       promoCode: req.body.promoCode,
+      adminId: req.body.userId,
     });
 
     if (existing && existing._id.toString() !== promoId) {
@@ -61,8 +82,8 @@ const updatepromo = async (req, res) => {
         .json({ success: false, message: "Promo code already in use." });
     }
 
-    const updatedPromo = await promoModel.findByIdAndUpdate(
-      promoId,
+    const updatedPromo = await promoModel.findOneAndUpdate(
+      { _id: promoId, userId: req.body.userId },
       {
         promoCode,
         discount,
@@ -98,6 +119,7 @@ const deletepromo = async (req, res) => {
   try {
     const promo = await promoModel.findOneAndDelete({
       promoCode: req.body.promoCode,
+      userId: req.body.userId,
     });
     if (promo) {
       return res

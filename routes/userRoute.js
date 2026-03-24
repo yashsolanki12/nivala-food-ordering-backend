@@ -7,6 +7,7 @@ import {
   getUser,
   updateUser,
   deleteUser,
+  linkUserToAdmin,
 } from "../controllers/userController.js";
 import authMiddleware from "../middleware/auth.js";
 
@@ -19,5 +20,6 @@ userRouter.get("/users", authMiddleware, listUser);
 userRouter.get("/:id", authMiddleware, getUser);
 userRouter.put("/:id", authMiddleware, updateUser);
 userRouter.delete("/:id", authMiddleware, deleteUser);
+userRouter.post("/link-to-admin", authMiddleware, linkUserToAdmin);
 
 export default userRouter;
