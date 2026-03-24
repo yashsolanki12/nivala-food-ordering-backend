@@ -19,7 +19,6 @@ const addFood = async (req, res) => {
     userId: req.body.userId,
   });
 
-  console.log(food);
   try {
     const foodList = await food.save();
     if (foodList) {
@@ -34,7 +33,7 @@ const addFood = async (req, res) => {
       });
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.json({ success: false, message: "Failed to add item" });
   }
 };
@@ -116,7 +115,7 @@ const getFood = async (req, res) => {
       });
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({
       success: false,
       message: "An error occurred while fetching get api.",
@@ -128,7 +127,6 @@ const getFood = async (req, res) => {
 //Getting Food List
 const listFood = async (req, res) => {
   try {
-    console.log("food list req", req.body);
     // Initialize req.body if undefined
     if (!req.body) {
       req.body = {};
@@ -136,19 +134,16 @@ const listFood = async (req, res) => {
 
     // Get the user's linked adminId
     const user = await userModel.findById(req.body.userId);
-    console.log("fetched user:", user);
     let adminIdToUse = req.body.userId;
 
     // If user has adminId linked, use that admin's products
     if (user && user.adminId) {
       adminIdToUse = user.adminId;
-      console.log("user has adminId, using:", adminIdToUse);
     } else {
-      console.log("user has no adminId, using own userId:", adminIdToUse);
+      console.error("user has no adminId, using own userId:", adminIdToUse);
     }
 
     const food = await foodModel.find({ userId: adminIdToUse });
-    console.log("food items found:", food.length);
     if (food) {
       return res.status(200).json({
         success: true,

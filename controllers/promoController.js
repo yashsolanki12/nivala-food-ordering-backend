@@ -57,7 +57,7 @@ const getallpromo = async (req, res) => {
     const promos = await promoModel.find({ userId: adminIdToUse });
     return res.status(200).json({ success: true, data: promos });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     res.status(500).json({
       success: false,
       message: "Failed to get promo",

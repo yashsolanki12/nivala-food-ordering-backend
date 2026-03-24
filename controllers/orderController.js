@@ -40,17 +40,15 @@ const placeOrder = async (req, res) => {
 };
 
 const userOrders = async (req, res) => {
-  console.log("req", req.body);
   try {
     const orders = await orderModel.find({ userId: req.body.userId });
-    console.log("order",orders)
     return res.status(200).json({
       success: true,
       message: "User order fetch successfully",
       data: orders,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({
       success: false,
       message: "An error occurred while fetching orders",
@@ -70,7 +68,7 @@ const listOrders = async (req, res) => {
       data: orders,
     });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({
       success: false,
       message: "An error occurred while listing orders",
@@ -88,7 +86,7 @@ const updateStatus = async (req, res) => {
     );
     return res.status(200).json({ success: true, message: "Status Updated" });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({
       success: false,
       message: "An error occurred while Updating Status",
