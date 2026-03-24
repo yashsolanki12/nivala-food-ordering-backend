@@ -5,7 +5,6 @@ import validator from "validator";
 import mongoose from "mongoose";
 
 const loginUser = async (req, res) => {
-  console.log("req of login user", req.body);
   const { email, password, user } = req.body;
   if (!email || !password) {
     return res
@@ -33,7 +32,7 @@ const loginUser = async (req, res) => {
       .status(200)
       .json({ success: true, message: "User Logged In", token, data: user });
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({ success: false, message: error });
   }
 };
@@ -73,8 +72,7 @@ const registerUser = async (req, res) => {
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
-    console.log("salt", salt);
-    console.log("hashed Password", hashedPassword);
+
     const newUser = new userModel({
       name: name,
       email: email,
@@ -82,19 +80,16 @@ const registerUser = async (req, res) => {
       role: role || "user",
       user: req.body.userId,
     });
-    console.log("user", newUser);
 
     const user = await newUser.save();
-    console.log("User", user);
     const token = jwtToken(user.name, user.email, user._id, user.role);
-    console.log("Token generated successfully");
     if (user) {
       return res
         .status(201)
         .json({ success: true, message: "User Registered", token, data: user });
     }
   } catch (error) {
-    console.log("Registration error:", error);
+    console.error("Registration error:", error);
     return res
       .status(500)
       .json({ success: false, message: error.message || error });
@@ -144,7 +139,6 @@ const loginadmin = async (req, res) => {
         data: admin,
       });
     }
-    console.log("admin login:", admin);
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error" });
   }
@@ -255,7 +249,7 @@ const updateUser = async (req, res) => {
       });
     }
   } catch (error) {
-    console.log(error);
+    console.error(error);
     return res.status(500).json({
       success: false,
       message: "An error occurred while updating the api of user.",
@@ -300,7 +294,6 @@ const deleteUser = async (req, res) => {
 const linkUserToAdmin = async (req, res) => {
   const { userId, adminId } = req.body;
   try {
-
     if (req.body.userRole !== "admin") {
       return res.status(403).json({
         success: false,
