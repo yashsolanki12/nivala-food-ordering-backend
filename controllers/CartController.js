@@ -4,6 +4,10 @@ import mongoose from "mongoose";
 
 const addToCart = async (req, res) => {
   try {
+    // Initialize req.body if undefined
+    if (!req.body) {
+      req.body = {};
+    }
     let userData = await userModel.findById(req.body.userId);
     let cartData = await userData.cartData;
 
@@ -36,18 +40,36 @@ const addToCart = async (req, res) => {
 
 const removeFromCart = async (req, res) => {
   try {
+    // Initialize req.body if undefined
+    if (!req.body) {
+      req.body = {};
+    }
     let userData = await userModel.findById(req.body.userId);
     let cartData = await userData.cartData;
 
+    // Check if the item exists in the cart
     if (cartData[req.body.itemId] > 0) {
       cartData[req.body.itemId] -= 1;
+
+      // If it's now 0, delete the key from the object
+      if (cartData[req.body.itemId] === 0) {
+        delete cartData[req.body.itemId];
+      }
     }
+    // Mark as modified and save
+    // This tells Mongoose the object structure changed (important for Mixed types)
+    // userData.markModified("users");
+    // await userData.save();
 
-    await userModel.findByIdAndUpdate(req.body.userId, { cartData });
+    await userModel.findByIdAndUpdate(req.body.userId, {
+      cartData,
+    });
 
-    return res
-      .status(200)
-      .json({ success: true, message: "Item Removed from Cart" });
+    return res.status(200).json({
+      success: true,
+      message: "Item Removed from Cart",
+      // data: cartData,
+    });
   } catch (error) {
     console.log(error);
     return res.status(500).json({ success: false, message: "Error" });
@@ -56,6 +78,10 @@ const removeFromCart = async (req, res) => {
 
 const getCart = async (req, res) => {
   try {
+    // Initialize req.body if undefined
+    if (!req.body) {
+      req.body = {};
+    }
     let userData = await userModel.findById(req.body.userId);
     let cartData = await userData.cartData;
 
@@ -114,6 +140,10 @@ const getCart = async (req, res) => {
 
 const deleteCart = async (req, res) => {
   try {
+    // Initialize req.body if undefined
+    if (!req.body) {
+      req.body = {};
+    }
     // Clear the entire cart for the user
     await userModel.findByIdAndUpdate(req.body.userId, { cartData: {} });
 

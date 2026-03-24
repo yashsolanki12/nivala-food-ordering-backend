@@ -5,7 +5,8 @@ import validator from "validator";
 import mongoose from "mongoose";
 
 const loginUser = async (req, res) => {
-  const { email, password } = req.body;
+  console.log("req of login user", req.body);
+  const { email, password, user } = req.body;
   if (!email || !password) {
     return res
       .status(400)
@@ -45,7 +46,6 @@ const jwtToken = (name, email, id, role) => {
 
 const registerUser = async (req, res) => {
   const { name, password, email, role } = req.body;
-  console.log("req", req.body);
   if (!name || !password || !email) {
     return res
       .status(400)
@@ -80,7 +80,9 @@ const registerUser = async (req, res) => {
       email: email,
       password: hashedPassword,
       role: role || "user",
+      user: req.body.userId,
     });
+    console.log("user", newUser);
 
     const user = await newUser.save();
     console.log("User", user);
@@ -134,26 +136,51 @@ const loginadmin = async (req, res) => {
         expiresIn: "1d",
       },
     );
-
-    res.status(200).json({ success: true, token });
+    if (admin) {
+      res.status(200).json({
+        success: true,
+        message: "Admin login successfully",
+        token,
+        data: admin,
+      });
+    }
+    console.log("admin login:", admin);
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error" });
   }
 };
 
-const listUser = async (_req, res) => {
+const listUser = async (req, res) => {
   try {
-    const user = await userModel.find({});
-    if (user) {
-      res.status(201).json({
+    const userNormal = await userModel.find({});
+    if (userNormal) {
+      return res.status(200).json({
         success: true,
         message: "User retrieved successfully",
-        data: user,
+        data: userNormal,
       });
     }
-    if (!user) {
-      res.status(404).json({ success: false, message: "User not found" });
+    if (!userNormal) {
+      return res
+        .status(404)
+        .json({ success: false, message: "User not found" });
     }
+
+    // Otherwise return all users (admin only) with user
+    // console.log("BEFORE:::", req.body);
+    // const user = await userModel.find({ user: req.body.userId });
+    // console.log("THat request body", req.body);
+    // console.log("USER LIST SHOWN", user);
+    // if (user) {
+    //   res.status(200).json({
+    //     success: true,
+    //     message: "User retrieved successfully",
+    //     data: user,
+    //   });
+    // }
+    // if (!user) {
+    //   res.status(404).json({ success: false, message: "User not found" });
+    // }
   } catch (error) {
     res.status(500).json({ success: false, message: "Server error" });
   }
@@ -269,6 +296,73 @@ const deleteUser = async (req, res) => {
   }
 };
 
+// Link a user to an admin
+const linkUserToAdmin = async (req, res) => {
+  const { userId, adminId } = req.body;
+  try {
+
+    if (req.body.userRole !== "admin") {
+      return res.status(403).json({
+        success: false,
+        message: "Only admins can link users to admins",
+      });
+    }
+
+    if (!userId || !adminId) {
+      return res.status(400).json({
+        success: false,
+        message: "userId and adminId are required",
+      });
+    }
+
+    // Verify both IDs are valid
+    if (
+      !mongoose.Types.ObjectId.isValid(userId) ||
+      !mongoose.Types.ObjectId.isValid(adminId)
+    ) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid ID format.",
+      });
+    }
+
+    // Verify the admin exists and has admin role
+    const admin = await userModel.findById(adminId);
+    if (!admin || admin.role !== "admin") {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid admin ID or not an admin.",
+      });
+    }
+
+    // Link the user to the admin
+    const user = await userModel.findByIdAndUpdate(
+      userId,
+      { adminId: adminId },
+      { new: true },
+    );
+
+    if (!user) {
+      return res.status(404).json({
+        success: false,
+        message: "User not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "User linked to admin successfully.",
+      data: user,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      success: false,
+      message: "An error occurred while linking user to admin.",
+      error: error.message,
+    });
+  }
+};
+
 export {
   loginUser,
   registerUser,
@@ -277,4 +371,5 @@ export {
   getUser,
   updateUser,
   deleteUser,
+  linkUserToAdmin,
 };

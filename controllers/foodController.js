@@ -1,9 +1,13 @@
 import foodModel from "../models/foodModel.js";
+import userModel from "../models/userModel.js";
 import mongoose from "mongoose";
 
 //add food item
 const addFood = async (req, res) => {
-
+  // Initialize req.body if undefined
+  if (!req.body) {
+    req.body = {};
+  }
   const food = new foodModel({
     name: req.body.name,
     description: req.body.description,
@@ -12,6 +16,7 @@ const addFood = async (req, res) => {
     category: req.body.category,
     serve: req.body.serve,
     type: req.body.type,
+    userId: req.body.userId,
   });
 
   console.log(food);
@@ -59,9 +64,11 @@ const updateFood = async (req, res) => {
       image: image,
       category: category,
     };
-    const updateFood = await foodModel.findByIdAndUpdate(id, payload, {
-      new: true,
-    });
+    const updateFood = await foodModel.findOneAndUpdate(
+      { _id: id, userId: req.body.userId },
+      payload,
+      { new: true },
+    );
     if (updateFood) {
       return res.status(200).json({
         success: true,
@@ -72,7 +79,7 @@ const updateFood = async (req, res) => {
     if (!updateFood) {
       return res.status(404).json({
         success: false,
-        message: "Product not found.",
+        message: "Product not found or you don't have permission to update it.",
       });
     }
   } catch (error) {
@@ -91,7 +98,10 @@ const getFood = async (req, res) => {
       });
     }
 
-    const food = await foodModel.findById(id);
+    const food = await foodModel.findOne({
+      _id: id,
+      userId: req.body.userId,
+    });
     if (food) {
       return res.status(200).json({
         success: true,
@@ -118,15 +128,33 @@ const getFood = async (req, res) => {
 //Getting Food List
 const listFood = async (req, res) => {
   try {
-    const food = await foodModel.find({});
+    console.log("food list req", req.body);
+    // Initialize req.body if undefined
+    if (!req.body) {
+      req.body = {};
+    }
+
+    // Get the user's linked adminId
+    const user = await userModel.findById(req.body.userId);
+    console.log("fetched user:", user);
+    let adminIdToUse = req.body.userId;
+
+    // If user has adminId linked, use that admin's products
+    if (user && user.adminId) {
+      adminIdToUse = user.adminId;
+      console.log("user has adminId, using:", adminIdToUse);
+    } else {
+      console.log("user has no adminId, using own userId:", adminIdToUse);
+    }
+
+    const food = await foodModel.find({ userId: adminIdToUse });
+    console.log("food items found:", food.length);
     if (food) {
-      return res
-        .status(200)
-        .json({
-          success: true,
-          message: "Product list fetched successfully",
-          data: food,
-        });
+      return res.status(200).json({
+        success: true,
+        message: "Product list fetched successfully",
+        data: food,
+      });
     }
     if (!food) {
       return res
@@ -142,7 +170,10 @@ const listFood = async (req, res) => {
 //Remove Food Item
 const removeFood = async (req, res) => {
   try {
-    const food = await foodModel.findById(req.body.id);
+    const food = await foodModel.findOne({
+      _id: req.body.id,
+      userId: req.body.userId,
+    });
     if (food) {
       await foodModel.findByIdAndDelete(req.body.id);
       res.json({ success: true, message: "Product deleted successfully." });
@@ -150,7 +181,7 @@ const removeFood = async (req, res) => {
     if (!food) {
       res.status(404).json({
         success: false,
-        message: "Cannot find the item to delete",
+        message: "Cannot find the item to delete or you don't have permission",
       });
     }
   } catch (error) {
