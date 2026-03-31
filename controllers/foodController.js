@@ -97,10 +97,11 @@ const getFood = async (req, res) => {
       });
     }
 
-    const food = await foodModel.findOne({
+    const food = await foodModel.find({
       _id: id,
-      userId: req.body.userId,
+      // userId: req.body.userId,
     });
+    console.log("FOOD", id);
     if (food) {
       return res.status(200).json({
         success: true,
