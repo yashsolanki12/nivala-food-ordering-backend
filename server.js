@@ -9,6 +9,7 @@ import userRouter from "./routes/userRoute.js";
 import cartRouter from "./routes/cartRoute.js";
 import orderRouter from "./routes/orderRoute.js";
 import PromoRouter from "./routes/promoRoute.js";
+import wishListRouter from "./routes/wishRouter.js";
 
 //app config
 const app = express();
@@ -45,6 +46,8 @@ app.use("/api/auth", userRouter);
 app.use("/api/cart", cartRouter);
 app.use("/api/order", orderRouter);
 app.use("/api/promo", PromoRouter);
+app.use("/api/wish-list", wishListRouter);
+
 const __dirname = path.resolve();
 app.use("/images", express.static(path.join(__dirname, "uploads")));
 
