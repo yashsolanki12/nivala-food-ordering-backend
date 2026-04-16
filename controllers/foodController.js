@@ -128,6 +128,8 @@ const getFood = async (req, res) => {
 //Getting Food List
 const listFood = async (req, res) => {
   try {
+    const { search } = req.query;
+
     // Initialize req.body if undefined
     if (!req.body) {
       req.body = {};
@@ -140,11 +142,23 @@ const listFood = async (req, res) => {
     // If user has adminId linked, use that admin's products
     if (user && user.adminId) {
       adminIdToUse = user.adminId;
-    } else {
-      console.error("user has no adminId, using own userId:", adminIdToUse);
     }
 
-    const food = await foodModel.find({ userId: adminIdToUse });
+    // Build query with userId
+    let query = { userId: adminIdToUse };
+
+    // Add search filter (search by name OR description)
+    if (search) {
+      query = {
+        userId: adminIdToUse,
+        $or: [
+          { name: { $regex: search, $options: "i" } },
+          // { description: { $regex: search, $options: "i" } },
+        ],
+      };
+    }
+
+    const food = await foodModel.find(query);
     if (food) {
       return res.status(200).json({
         success: true,
@@ -186,4 +200,54 @@ const removeFood = async (req, res) => {
   }
 };
 
-export { addFood, listFood, removeFood, updateFood, getFood };
+//Get related products by category
+const getRelatedFood = async (req, res) => {
+  try {
+    const { category, productId } = req.query;
+    const userId = req.body.userId;
+
+    if (!category) {
+      return res
+        .status(400)
+        .json({ success: false, message: "Category required" });
+    }
+
+    // Get the user's linked adminId
+    const user = await userModel.findById(req.body.userId);
+    let adminIdToUse = req.body.userId;
+
+    // If user has adminId linked, use that admin's products
+    if (user && user.adminId) {
+      adminIdToUse = user.adminId;
+    }
+    // Find products with same category, exclude current product
+    const query = {
+      category: category,
+      userId: adminIdToUse,
+    };
+
+    if (productId) {
+      query._id = { $ne: productId };
+    }
+
+    const food = await foodModel.find(query);
+    if (food) {
+      return res.status(200).json({
+        success: true,
+        message: "Related product retrieved successfully.",
+        data: food,
+      });
+    }
+    if (!food) {
+      return res.status(404).json({
+        success: false,
+        message: "No related item found",
+      });
+    }
+  } catch (error) {
+    console.log(error);
+    res.json({ success: false, message: "Failed to fetch related products" });
+  }
+};
+
+export { addFood, listFood, removeFood, updateFood, getFood, getRelatedFood };
