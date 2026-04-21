@@ -8,6 +8,8 @@ const foodSchema = new mongoose.Schema({
   category: { type: String, required: true },
   serve: { type: String, required: false },
   type: { type: String, required: false },
+  discount: { type: Number, required: false },
+  strike_price: { type: Number, required: false },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     required: true,
