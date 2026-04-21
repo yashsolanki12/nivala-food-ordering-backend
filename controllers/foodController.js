@@ -8,16 +8,32 @@ const addFood = async (req, res) => {
   if (!req.body) {
     req.body = {};
   }
-  const food = new foodModel({
+
+  // Original price
+  const originalPrice = req.body.price || 0;
+  // Discount Amount
+
+  const discountAmount = req.body.discount || 0;
+
+  const foodData = {
     name: req.body.name,
     description: req.body.description,
-    price: req.body.price,
+    price: originalPrice,
     image: req.body.image,
     category: req.body.category,
     serve: req.body.serve,
     type: req.body.type,
     userId: req.body.userId,
-  });
+  };
+
+  // Calculate the final price
+  const calculatedStrikePrice = originalPrice - discountAmount;
+  if (req.body.discount !== undefined && req.body.discount !== null) {
+    foodData.discount = Number(req.body.discount);
+    foodData.strike_price = calculatedStrikePrice;
+  }
+
+  const food = new foodModel(foodData);
 
   try {
     const foodList = await food.save();
@@ -36,7 +52,7 @@ const addFood = async (req, res) => {
     console.error(error);
     res.json({ success: false, message: "Failed to add item" });
   }
-};
+};;
 
 // Update food item
 const updateFood = async (req, res) => {
